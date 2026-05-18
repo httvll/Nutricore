@@ -1,0 +1,1810 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>NutriPlan — Tu asistente nutricional</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green: #1a7a5e;
+    --green-light: #e8f5f0;
+    --green-mid: #2ea87d;
+    --green-pale: #f0faf6;
+    --text: #1a1f1c;
+    --text-muted: #6b7572;
+    --text-soft: #9aaba6;
+    --bg: #ffffff;
+    --bg-surface: #f7faf8;
+    --bg-card: #ffffff;
+    --border: #e2ece8;
+    --border-soft: #eef3f1;
+    --accent: #ff6b35;
+    --accent-light: #fff2ed;
+    --radius: 16px;
+    --radius-sm: 10px;
+    --shadow: 0 2px 16px rgba(26,122,94,0.08);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: #e8ede9;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    padding: 24px 0;
+  }
+
+  .phone-frame {
+    width: 390px;
+    min-height: 844px;
+    background: var(--bg);
+    border-radius: 44px;
+    overflow: hidden;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.18), 0 0 0 8px #1a1a1a, 0 0 0 10px #333;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .screen {
+    display: none;
+    flex-direction: column;
+    height: 844px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    position: relative;
+    background: var(--bg);
+    flex: 1;
+  }
+
+  .screen.active { display: flex; }
+
+  /* Scrollbar */
+  .screen::-webkit-scrollbar { width: 0; }
+
+  /* Status bar */
+  .status-bar {
+    background: white;
+    padding: 14px 28px 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    position: sticky;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
+  }
+
+  /* Status bar sobre fondo verde — texto blanco y fondo transparente */
+  .status-bar.white {
+    color: white;
+    background: transparent;
+    position: absolute;
+  }
+  .status-icons { display: flex; gap: 6px; align-items: center; font-size: 12px; }
+
+  /* Bottom nav */
+  .bottom-nav {
+    position: sticky;
+    bottom: 0;
+    background: var(--bg);
+    border-top: 1px solid var(--border-soft);
+    display: flex;
+    padding: 10px 0 24px;
+    z-index: 100;
+  }
+
+  .nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    padding: 4px 0;
+    transition: all 0.2s;
+  }
+
+  .nav-icon {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    font-size: 18px;
+    transition: all 0.2s;
+  }
+
+  .nav-item.active .nav-icon {
+    background: var(--green-light);
+    color: var(--green);
+  }
+
+  .nav-item:not(.active) .nav-icon { color: var(--text-soft); }
+
+  .nav-label {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--text-soft);
+  }
+
+  .nav-item.active .nav-label { color: var(--green); }
+
+  /* === SPLASH === */
+  #screen-splash {
+    background: linear-gradient(160deg, #1a7a5e 0%, #0d5240 100%);
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .splash-logo {
+    width: 80px;
+    height: 80px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    margin-bottom: 8px;
+  }
+
+  .splash-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 36px;
+    color: white;
+    letter-spacing: -0.5px;
+  }
+
+  .splash-sub {
+    font-size: 16px;
+    color: rgba(255,255,255,0.7);
+    text-align: center;
+    line-height: 1.5;
+    max-width: 260px;
+  }
+
+  .btn-primary {
+    background: white;
+    color: var(--green);
+    border: none;
+    border-radius: 14px;
+    padding: 16px 32px;
+    font-size: 16px;
+    font-weight: 600;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    width: calc(100% - 64px);
+    margin-top: 16px;
+    transition: all 0.2s;
+  }
+
+  .btn-primary:hover { opacity: 0.92; transform: translateY(-1px); }
+
+  .btn-outline {
+    background: transparent;
+    color: rgba(255,255,255,0.8);
+    border: 1.5px solid rgba(255,255,255,0.3);
+    border-radius: 14px;
+    padding: 14px 32px;
+    font-size: 15px;
+    font-weight: 500;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    width: calc(100% - 64px);
+    transition: all 0.2s;
+  }
+
+  /* === LOGIN === */
+  #screen-login {
+    background: var(--bg);
+    padding: 100px 28px 40px;
+    gap: 20px;
+  }
+
+  .login-header { margin-bottom: 8px; }
+
+  .login-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 30px;
+    color: var(--text);
+    line-height: 1.2;
+    margin-bottom: 6px;
+  }
+
+  .login-sub { font-size: 15px; color: var(--text-muted); }
+
+  .form-group { display: flex; flex-direction: column; gap: 8px; }
+
+  .form-label { font-size: 13px; font-weight: 500; color: var(--text-muted); }
+
+  .form-input {
+    background: var(--bg-surface);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    font-size: 15px;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .form-input:focus { border-color: var(--green); }
+
+  .btn-green {
+    background: var(--green);
+    color: white;
+    border: none;
+    border-radius: 14px;
+    padding: 16px;
+    font-size: 16px;
+    font-weight: 600;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    width: 100%;
+    transition: all 0.2s;
+  }
+
+  .btn-green:hover { background: #145e48; }
+
+  .link-text {
+    text-align: center;
+    font-size: 14px;
+    color: var(--text-muted);
+    cursor: pointer;
+  }
+
+  .link-text span { color: var(--green); font-weight: 500; }
+
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--text-soft);
+    font-size: 13px;
+  }
+
+  .divider::before, .divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* === ONBOARDING === */
+  #screen-onboarding {
+    background: var(--bg);
+    padding: 0;
+  }
+
+  .onboard-header {
+    padding: 16px 28px 28px;
+    background: var(--green-pale);
+  }
+
+  .progress-bar {
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin-bottom: 24px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--green);
+    border-radius: 2px;
+    width: 40%;
+    transition: width 0.3s;
+  }
+
+  .onboard-step { font-size: 12px; color: var(--green); font-weight: 600; margin-bottom: 6px; letter-spacing: 1px; text-transform: uppercase; }
+  .onboard-title { font-family: 'DM Serif Display', serif; font-size: 26px; color: var(--text); line-height: 1.3; }
+
+  .onboard-body { padding: 28px; flex: 1; display: flex; flex-direction: column; gap: 16px; }
+
+  .option-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  .option-card {
+    background: var(--bg-surface);
+    border: 2px solid var(--border);
+    border-radius: 14px;
+    padding: 16px 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .option-card.selected {
+    background: var(--green-light);
+    border-color: var(--green);
+  }
+
+  .option-card:hover { border-color: var(--green-mid); }
+
+  .option-emoji { font-size: 22px; }
+  .option-label { font-size: 13px; font-weight: 500; color: var(--text); }
+
+  .slider-row { display: flex; flex-direction: column; gap: 8px; }
+  .slider-label-row { display: flex; justify-content: space-between; align-items: center; }
+  .slider-value { font-size: 20px; font-weight: 600; color: var(--green); }
+  .slider-unit { font-size: 13px; color: var(--text-muted); }
+
+  input[type=range] {
+    width: 100%;
+    accent-color: var(--green);
+    height: 6px;
+    cursor: pointer;
+  }
+
+  /* === DASHBOARD (HOME) === */
+  #screen-home { background: var(--bg-surface); }
+
+  .home-header {
+    background: var(--green);
+    padding: 56px 24px 80px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .home-header::after {
+    content: '';
+    position: absolute;
+    bottom: -30px;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background: var(--bg-surface);
+    border-radius: 30px 30px 0 0;
+  }
+
+  .greeting { font-size: 14px; color: rgba(255,255,255,0.7); margin-bottom: 4px; }
+  .user-name { font-family: 'DM Serif Display', serif; font-size: 26px; color: white; }
+
+  .macro-card {
+    background: white;
+    border-radius: 20px;
+    padding: 20px;
+    margin: -40px 20px 0;
+    box-shadow: var(--shadow);
+    position: relative;
+    z-index: 5;
+  }
+
+  .macro-title { font-size: 13px; color: var(--text-muted); margin-bottom: 4px; }
+  .macro-cals { font-family: 'DM Serif Display', serif; font-size: 32px; color: var(--text); }
+  .macro-sub { font-size: 12px; color: var(--text-soft); margin-bottom: 16px; }
+
+  .cal-bar { height: 8px; background: var(--border-soft); border-radius: 4px; overflow: hidden; margin-bottom: 16px; }
+  .cal-fill { height: 100%; background: linear-gradient(90deg, var(--green-mid), var(--green)); border-radius: 4px; width: 58%; }
+
+  .macro-row { display: flex; gap: 12px; }
+
+  .macro-pill {
+    flex: 1;
+    background: var(--bg-surface);
+    border-radius: 10px;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .macro-pill-label { font-size: 11px; color: var(--text-soft); }
+  .macro-pill-val { font-size: 15px; font-weight: 600; color: var(--text); }
+  .macro-pill-bar { height: 3px; border-radius: 2px; margin-top: 6px; }
+
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 20px 12px;
+  }
+
+  .section-title { font-size: 17px; font-weight: 600; color: var(--text); }
+  .section-link { font-size: 13px; color: var(--green); font-weight: 500; cursor: pointer; }
+
+  .today-meals { padding: 0 20px; display: flex; flex-direction: column; gap: 10px; }
+
+  .meal-item {
+    background: white;
+    border-radius: 14px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .meal-item:hover { transform: translateX(2px); }
+
+  .meal-emoji {
+    width: 44px;
+    height: 44px;
+    background: var(--green-pale);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+
+  .meal-info { flex: 1; }
+  .meal-type { font-size: 11px; color: var(--text-soft); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+  .meal-name { font-size: 15px; font-weight: 500; color: var(--text); margin-top: 1px; }
+  .meal-cals { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+  .meal-check {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 14px;
+  }
+
+  .meal-check.done { background: var(--green); border-color: var(--green); color: white; }
+
+  /* Quick stats */
+  .quick-stats { display: flex; gap: 10px; padding: 4px 20px 16px; }
+
+  .stat-card {
+    flex: 1;
+    background: white;
+    border-radius: 14px;
+    padding: 14px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .stat-icon { font-size: 18px; margin-bottom: 4px; }
+  .stat-val { font-size: 18px; font-weight: 600; color: var(--text); }
+  .stat-label { font-size: 11px; color: var(--text-soft); }
+
+  /* === PLANNER === */
+  #screen-planner { background: var(--bg-surface); }
+
+  .planner-header {
+    background: white;
+    padding: 16px 20px 16px;
+    border-bottom: 1px solid var(--border-soft);
+  }
+
+  .planner-title { font-family: 'DM Serif Display', serif; font-size: 24px; color: var(--text); margin-bottom: 16px; }
+
+  .day-tabs {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+
+  .day-tabs::-webkit-scrollbar { height: 0; }
+
+  .day-tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 12px;
+    border-radius: 12px;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.2s;
+  }
+
+  .day-tab.active { background: var(--green); }
+  .day-tab-day { font-size: 11px; color: var(--text-soft); font-weight: 500; }
+  .day-tab-num { font-size: 16px; font-weight: 600; color: var(--text); }
+  .day-tab.active .day-tab-day, .day-tab.active .day-tab-num { color: white; }
+
+  .planner-body { padding: 16px 20px; display: flex; flex-direction: column; gap: 12px; }
+
+  .meal-slot {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .meal-slot-header {
+    padding: 14px 16px 10px;
+    border-bottom: 1px solid var(--border-soft);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .meal-slot-type { font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; }
+
+  .meal-slot-body { padding: 14px 16px; display: flex; align-items: center; gap: 12px; }
+
+  .meal-slot-emoji {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: var(--green-pale);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    flex-shrink: 0;
+  }
+
+  .meal-slot-info { flex: 1; }
+  .meal-slot-name { font-size: 15px; font-weight: 500; color: var(--text); margin-bottom: 4px; }
+  .meal-slot-macros { font-size: 12px; color: var(--text-soft); }
+
+  .meal-slot-actions { display: flex; gap: 8px; }
+
+  .icon-btn {
+    width: 32px;
+    height: 32px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 16px;
+    color: var(--text-muted);
+    background: white;
+    transition: all 0.2s;
+  }
+
+  .icon-btn:hover { border-color: var(--green); color: var(--green); }
+
+  /* === RECIPES === */
+  #screen-recipes { background: var(--bg-surface); }
+
+  .recipes-header {
+    background: white;
+    padding: 16px 20px 16px;
+    border-bottom: 1px solid var(--border-soft);
+  }
+
+  .recipes-title { font-family: 'DM Serif Display', serif; font-size: 24px; color: var(--text); margin-bottom: 14px; }
+
+  .search-bar {
+    display: flex;
+    align-items: center;
+    background: var(--bg-surface);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 14px;
+    gap: 10px;
+  }
+
+  .search-bar span { font-size: 18px; color: var(--text-soft); }
+  .search-bar input { border: none; background: none; font-size: 15px; font-family: 'DM Sans', sans-serif; color: var(--text); outline: none; flex: 1; }
+
+  .filter-chips { display: flex; gap: 8px; overflow-x: auto; padding: 14px 20px 0; }
+  .filter-chips::-webkit-scrollbar { height: 0; }
+
+  .chip {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.2s;
+    border: 1.5px solid var(--border);
+    background: white;
+    color: var(--text-muted);
+  }
+
+  .chip.active { background: var(--green); border-color: var(--green); color: white; }
+
+  .recipes-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 16px 20px; }
+
+  .recipe-card {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .recipe-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+
+  .recipe-img {
+    height: 100px;
+    background: var(--green-pale);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    position: relative;
+  }
+
+  .recipe-tag {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: white;
+    border-radius: 6px;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--green);
+  }
+
+  .recipe-info { padding: 10px 12px 12px; }
+  .recipe-name { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 4px; line-height: 1.3; }
+  .recipe-macros { font-size: 11px; color: var(--text-soft); }
+  .recipe-cals { font-size: 13px; font-weight: 600; color: var(--green); margin-top: 6px; }
+
+  /* === SHOPPING === */
+  #screen-shopping { background: var(--bg-surface); }
+
+  .shopping-header {
+    background: white;
+    padding: 16px 20px 20px;
+    border-bottom: 1px solid var(--border-soft);
+  }
+
+  .shopping-title { font-family: 'DM Serif Display', serif; font-size: 24px; color: var(--text); margin-bottom: 4px; }
+  .shopping-sub { font-size: 14px; color: var(--text-muted); }
+
+  .shopping-category { padding: 20px 20px 0; }
+  .cat-label { font-size: 12px; font-weight: 600; color: var(--text-soft); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 10px; }
+
+  .shop-item {
+    background: white;
+    border-radius: 12px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .shop-check {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    border: 2px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s;
+    font-size: 13px;
+  }
+
+  .shop-check.done { background: var(--green); border-color: var(--green); color: white; }
+
+  .shop-info { flex: 1; }
+  .shop-name { font-size: 15px; font-weight: 500; color: var(--text); }
+  .shop-name.done { text-decoration: line-through; color: var(--text-soft); }
+  .shop-qty { font-size: 12px; color: var(--text-soft); margin-top: 1px; }
+
+  .shop-emoji { font-size: 18px; flex-shrink: 0; }
+
+  /* === PROFILE === */
+  #screen-profile { background: var(--bg-surface); }
+
+  .profile-header {
+    background: var(--green);
+    padding: 56px 24px 56px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    /* NO overflow:hidden — evita que el avatar se corte */
+  }
+
+  .profile-header::after {
+    content: '';
+    position: absolute;
+    bottom: -30px;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background: var(--bg-surface);
+    border-radius: 30px 30px 0 0;
+    /* z-index negativo para que quede DETRÁS del avatar */
+    z-index: 0;
+  }
+
+  .avatar {
+    width: 80px;
+    height: 80px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    margin-bottom: 12px;
+    border: 3px solid rgba(255,255,255,0.4);
+    position: relative;
+    z-index: 1;
+  }
+
+  .profile-name { font-family: 'DM Serif Display', serif; font-size: 22px; color: white; position: relative; z-index: 1; }
+  .profile-goal { font-size: 13px; color: rgba(255,255,255,0.7); margin-top: 4px; position: relative; z-index: 1; }
+
+  .profile-body { padding: 8px 20px 20px; }
+
+  .profile-section {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+
+  .profile-section-title {
+    padding: 14px 16px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    border-bottom: 1px solid var(--border-soft);
+  }
+
+  .profile-row {
+    padding: 14px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-soft);
+    cursor: pointer;
+  }
+
+  .profile-row:last-child { border-bottom: none; }
+
+  .profile-row-left { display: flex; align-items: center; gap: 10px; }
+  .profile-row-icon { font-size: 18px; color: var(--text-muted); }
+  .profile-row-label { font-size: 15px; color: var(--text); }
+  .profile-row-value { font-size: 14px; color: var(--text-soft); }
+  .profile-row-arrow { font-size: 16px; color: var(--text-soft); }
+
+  /* Restrictions tags */
+  .tags-wrap { display: flex; flex-wrap: wrap; gap: 6px; padding: 14px 16px; }
+
+  .tag {
+    background: var(--green-light);
+    color: var(--green);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .tag.alert { background: #fff2ed; color: var(--accent); }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--text);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+    opacity: 0;
+    transition: all 0.3s;
+    pointer-events: none;
+    z-index: 1000;
+    white-space: nowrap;
+  }
+
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* Modal overlay */
+  .modal-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    display: none;
+    align-items: flex-end;
+    z-index: 200;
+    border-radius: 44px;
+  }
+
+  .modal-overlay.show { display: flex; }
+
+  .modal-sheet {
+    background: white;
+    border-radius: 28px 28px 0 0;
+    padding: 20px 24px 40px;
+    width: 100%;
+  }
+
+  .modal-handle {
+    width: 40px;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin: 0 auto 20px;
+  }
+
+  .modal-title { font-family: 'DM Serif Display', serif; font-size: 22px; color: var(--text); margin-bottom: 16px; }
+  .modal-subtitle { font-size: 14px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5; }
+
+  .recipe-detail-macro {
+    display: flex;
+    justify-content: space-between;
+    background: var(--bg-surface);
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 20px;
+  }
+
+  .rdm-item { text-align: center; }
+  .rdm-val { font-size: 18px; font-weight: 600; color: var(--text); }
+  .rdm-label { font-size: 11px; color: var(--text-soft); margin-top: 2px; }
+
+  /* Nutricionista panel */
+  .nutri-card {
+    background: linear-gradient(135deg, var(--green-pale) 0%, #e0f5ec 100%);
+    border: 1.5px solid var(--green-light);
+    border-radius: 16px;
+    padding: 16px;
+    margin: 0 20px 12px;
+    cursor: pointer;
+  }
+
+  .nutri-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .nutri-avatar { font-size: 24px; }
+  .nutri-name { font-size: 14px; font-weight: 600; color: var(--text); }
+  .nutri-title { font-size: 12px; color: var(--text-muted); }
+  .nutri-note { font-size: 13px; color: var(--text-muted); line-height: 1.5; font-style: italic; }
+  .nutri-date { font-size: 11px; color: var(--text-soft); margin-top: 8px; }
+
+</style>
+</head>
+<body>
+
+<div class="phone-frame">
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
+
+  <!-- MODAL RECIPE DETAIL -->
+  <div class="modal-overlay" id="recipeModal">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div id="recipeModalContent"></div>
+      <button class="btn-green" onclick="closeModal()">Agregar al plan</button>
+    </div>
+  </div>
+
+  <!-- SCREEN: SPLASH -->
+  <div class="screen active" id="screen-splash">
+    <div class="splash-logo">🥗</div>
+    <div class="splash-title">NutriPlan</div>
+    <div class="splash-sub">Tu asistente nutricional personal. Planes adaptados a ti.</div>
+    <button class="btn-primary" onclick="goTo('screen-login')">Comenzar</button>
+    <button class="btn-outline" onclick="goTo('screen-login')">Ya tengo cuenta</button>
+  </div>
+
+  <!-- SCREEN: LOGIN -->
+  <div class="screen" id="screen-login">
+    <div class="status-bar"><span>9:41</span><div class="status-icons">📶 🔋</div></div>
+    <div style="padding: 20px 28px 40px; display: flex; flex-direction: column; gap: 20px;">
+      <div>
+        <div class="login-title">Bienvenido de vuelta 👋</div>
+        <div class="login-sub">Ingresa a tu cuenta NutriPlan</div>
+      </div>
+      <div class="form-group">
+        <div class="form-label">Correo electrónico</div>
+        <input class="form-input" type="email" placeholder="tucorreo@email.com" value="ana.garcia@email.com">
+      </div>
+      <div class="form-group">
+        <div class="form-label">Contraseña</div>
+        <input class="form-input" type="password" placeholder="••••••••" value="••••••••">
+      </div>
+      <div style="text-align: right; margin-top: -8px;">
+        <span style="font-size: 13px; color: var(--green); font-weight: 500; cursor: pointer;">¿Olvidaste tu contraseña?</span>
+      </div>
+      <button class="btn-green" onclick="goTo('screen-onboarding')">Iniciar sesión</button>
+      <div class="divider">o</div>
+      <div class="link-text">¿No tienes cuenta? <span onclick="goTo('screen-onboarding')">Regístrate gratis</span></div>
+    </div>
+  </div>
+
+  <!-- SCREEN: ONBOARDING -->
+  <div class="screen" id="screen-onboarding">
+    <div class="status-bar"><span>9:41</span><div class="status-icons">📶 🔋</div></div>
+    <div class="onboard-header">
+      <div class="progress-bar"><div class="progress-fill"></div></div>
+      <div class="onboard-step">Paso 2 de 5</div>
+      <div class="onboard-title">¿Cuál es tu objetivo principal?</div>
+    </div>
+    <div class="onboard-body">
+      <div class="option-grid">
+        <div class="option-card selected" onclick="selectOption(this)">
+          <div class="option-emoji">🔥</div>
+          <div class="option-label">Bajar de peso</div>
+        </div>
+        <div class="option-card" onclick="selectOption(this)">
+          <div class="option-emoji">⚖️</div>
+          <div class="option-label">Mantener peso</div>
+        </div>
+        <div class="option-card" onclick="selectOption(this)">
+          <div class="option-emoji">💪</div>
+          <div class="option-label">Ganar músculo</div>
+        </div>
+        <div class="option-card" onclick="selectOption(this)">
+          <div class="option-emoji">🌿</div>
+          <div class="option-label">Comer mejor</div>
+        </div>
+      </div>
+      <div style="margin-top: 16px;">
+        <div class="form-label" style="margin-bottom: 16px;">Tu información básica</div>
+        <div class="slider-row" style="margin-bottom: 20px;">
+          <div class="slider-label-row">
+            <span class="form-label">Edad</span>
+            <div><span class="slider-value" id="val-age">27</span> <span class="slider-unit">años</span></div>
+          </div>
+          <input type="range" min="18" max="75" value="27" oninput="document.getElementById('val-age').textContent=this.value">
+        </div>
+        <div class="slider-row" style="margin-bottom: 20px;">
+          <div class="slider-label-row">
+            <span class="form-label">Peso</span>
+            <div><span class="slider-value" id="val-weight">68</span> <span class="slider-unit">kg</span></div>
+          </div>
+          <input type="range" min="40" max="150" value="68" oninput="document.getElementById('val-weight').textContent=this.value">
+        </div>
+        <div class="slider-row">
+          <div class="slider-label-row">
+            <span class="form-label">Altura</span>
+            <div><span class="slider-value" id="val-height">165</span> <span class="slider-unit">cm</span></div>
+          </div>
+          <input type="range" min="140" max="210" value="165" oninput="document.getElementById('val-height').textContent=this.value">
+        </div>
+      </div>
+      <div style="margin-top: 8px;">
+        <div class="form-label" style="margin-bottom: 12px;">Restricciones alimentarias</div>
+        <div class="option-grid">
+          <div class="option-card" onclick="selectOption(this)">
+            <div class="option-emoji">🥛</div>
+            <div class="option-label">Sin lácteos</div>
+          </div>
+          <div class="option-card selected" onclick="selectOption(this)">
+            <div class="option-emoji">🌾</div>
+            <div class="option-label">Sin gluten</div>
+          </div>
+          <div class="option-card" onclick="selectOption(this)">
+            <div class="option-emoji">🥩</div>
+            <div class="option-label">Vegetariano</div>
+          </div>
+          <div class="option-card" onclick="selectOption(this)">
+            <div class="option-emoji">🥦</div>
+            <div class="option-label">Vegano</div>
+          </div>
+        </div>
+      </div>
+      <button class="btn-green" onclick="goToHome()" style="margin-top: 8px;">Continuar →</button>
+    </div>
+  </div>
+
+  <!-- SCREEN: HOME/DASHBOARD -->
+  <div class="screen" id="screen-home">
+    <div class="status-bar white"><span>9:41</span><div class="status-icons" style="color:white">📶 🔋</div></div>
+    <div class="home-header">
+      <div class="greeting">Lunes, 18 de mayo</div>
+      <div class="user-name">Hola, Ana 👋</div>
+    </div>
+
+    <!-- Macro Card -->
+    <div class="macro-card">
+      <div class="macro-title">Calorías de hoy</div>
+      <div class="macro-cals">1,247 <span style="font-size:18px; font-family: 'DM Sans'; font-weight:400; color:var(--text-muted)">/ 1,850 kcal</span></div>
+      <div class="macro-sub">603 kcal restantes para tu meta</div>
+      <div class="cal-bar"><div class="cal-fill"></div></div>
+      <div class="macro-row">
+        <div class="macro-pill">
+          <div class="macro-pill-label">Proteínas</div>
+          <div class="macro-pill-val">64g</div>
+          <div class="macro-pill-bar" style="background: #dbeafe; position:relative; overflow:hidden;">
+            <div style="position:absolute; inset:0; width:60%; background: #3b82f6; border-radius: 2px;"></div>
+          </div>
+        </div>
+        <div class="macro-pill">
+          <div class="macro-pill-label">Carbohidratos</div>
+          <div class="macro-pill-val">142g</div>
+          <div class="macro-pill-bar" style="background: #fef9c3; position:relative; overflow:hidden;">
+            <div style="position:absolute; inset:0; width:55%; background: #eab308; border-radius: 2px;"></div>
+          </div>
+        </div>
+        <div class="macro-pill">
+          <div class="macro-pill-label">Grasas</div>
+          <div class="macro-pill-val">38g</div>
+          <div class="macro-pill-bar" style="background: #fce7f3; position:relative; overflow:hidden;">
+            <div style="position:absolute; inset:0; width:70%; background: #ec4899; border-radius: 2px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Nota nutricionista -->
+    <div class="nutri-card" onclick="showToast('📋 Notas de tu nutricionista')">
+      <div class="nutri-header">
+        <div class="nutri-avatar">👩‍⚕️</div>
+        <div>
+          <div class="nutri-name">Dra. Martínez</div>
+          <div class="nutri-title">Nutricionista certificada</div>
+        </div>
+        <div style="margin-left:auto; font-size:13px; color:var(--green); font-weight:500;">Ver →</div>
+      </div>
+      <div class="nutri-note">"Mantén el déficit calórico moderado y prioriza proteínas en el desayuno. Recuerda hidratarte bien."</div>
+      <div class="nutri-date">Actualizado hace 3 días</div>
+    </div>
+
+    <!-- Today's meals -->
+    <div class="section-header">
+      <div class="section-title">Plan de hoy</div>
+      <div class="section-link" onclick="goTo('screen-planner')">Ver semana →</div>
+    </div>
+
+    <div class="today-meals">
+      <div class="meal-item" onclick="showToast('🥣 Avena con proteína – 380 kcal')">
+        <div class="meal-emoji">🥣</div>
+        <div class="meal-info">
+          <div class="meal-type">Desayuno · 8:00 am</div>
+          <div class="meal-name">Avena con proteína y frutas</div>
+          <div class="meal-cals">380 kcal · P: 22g · C: 48g · G: 8g</div>
+        </div>
+        <div class="meal-check done" onclick="event.stopPropagation(); toggleCheck(this)">✓</div>
+      </div>
+
+      <div class="meal-item" onclick="showToast('🥗 Ensalada – 290 kcal')">
+        <div class="meal-emoji">🍎</div>
+        <div class="meal-info">
+          <div class="meal-type">Snack · 11:00 am</div>
+          <div class="meal-name">Manzana con mantequilla de maní</div>
+          <div class="meal-cals">180 kcal · P: 4g · C: 22g · G: 9g</div>
+        </div>
+        <div class="meal-check done" onclick="event.stopPropagation(); toggleCheck(this)">✓</div>
+      </div>
+
+      <div class="meal-item" onclick="showToast('🍗 Almuerzo – 487 kcal')">
+        <div class="meal-emoji">🍗</div>
+        <div class="meal-info">
+          <div class="meal-type">Almuerzo · 1:00 pm</div>
+          <div class="meal-name">Pollo a la plancha con quinoa</div>
+          <div class="meal-cals">487 kcal · P: 42g · C: 48g · G: 12g</div>
+        </div>
+        <div class="meal-check done" onclick="event.stopPropagation(); toggleCheck(this)">✓</div>
+      </div>
+
+      <div class="meal-item" style="opacity:0.6">
+        <div class="meal-emoji">🐟</div>
+        <div class="meal-info">
+          <div class="meal-type">Cena · 8:00 pm</div>
+          <div class="meal-name">Salmón con verduras al vapor</div>
+          <div class="meal-cals">420 kcal · P: 38g · C: 22g · G: 18g</div>
+        </div>
+        <div class="meal-check" onclick="event.stopPropagation(); toggleCheck(this)"></div>
+      </div>
+
+      <div class="meal-item" style="opacity:0.6">
+        <div class="meal-emoji">🥜</div>
+        <div class="meal-info">
+          <div class="meal-type">Snack · 5:00 pm</div>
+          <div class="meal-name">Yogur griego con nueces</div>
+          <div class="meal-cals">200 kcal · P: 14g · C: 12g · G: 8g</div>
+        </div>
+        <div class="meal-check" onclick="event.stopPropagation(); toggleCheck(this)"></div>
+      </div>
+    </div>
+
+    <!-- Quick stats -->
+    <div class="section-header" style="padding-top:20px">
+      <div class="section-title">Tu progreso</div>
+    </div>
+    <div class="quick-stats">
+      <div class="stat-card">
+        <div class="stat-icon">💧</div>
+        <div class="stat-val">6/8</div>
+        <div class="stat-label">Vasos agua</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🔥</div>
+        <div class="stat-val">12</div>
+        <div class="stat-label">Días streak</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">⚖️</div>
+        <div class="stat-val">-2.3</div>
+        <div class="stat-label">kg este mes</div>
+      </div>
+    </div>
+
+    <div style="height: 100px;"></div>
+
+    <div class="bottom-nav">
+      <div class="nav-item active" onclick="switchTab('screen-home', this)">
+        <div class="nav-icon">🏠</div>
+        <div class="nav-label">Inicio</div>
+      </div>
+      <div class="nav-item" onclick="switchTab('screen-planner', this)">
+        <div class="nav-icon">📅</div>
+        <div class="nav-label">Planner</div>
+      </div>
+      <div class="nav-item" onclick="switchTab('screen-recipes', this)">
+        <div class="nav-icon">🍽️</div>
+        <div class="nav-label">Recetas</div>
+      </div>
+      <div class="nav-item" onclick="switchTab('screen-shopping', this)">
+        <div class="nav-icon">🛒</div>
+        <div class="nav-label">Compras</div>
+      </div>
+      <div class="nav-item" onclick="switchTab('screen-profile', this)">
+        <div class="nav-icon">👤</div>
+        <div class="nav-label">Perfil</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN: PLANNER -->
+  <div class="screen" id="screen-planner">
+    <div class="status-bar"><span>9:41</span><div class="status-icons">📶 🔋</div></div>
+    <div class="planner-header">
+      <div class="planner-title">Plan Semanal</div>
+      <div class="day-tabs">
+        <div class="day-tab" onclick="selectDay(this)">
+          <div class="day-tab-day">Lun</div>
+          <div class="day-tab-num">18</div>
+        </div>
+        <div class="day-tab active" onclick="selectDay(this)">
+          <div class="day-tab-day">Mar</div>
+          <div class="day-tab-num">19</div>
+        </div>
+        <div class="day-tab" onclick="selectDay(this)">
+          <div class="day-tab-day">Mié</div>
+          <div class="day-tab-num">20</div>
+        </div>
+        <div class="day-tab" onclick="selectDay(this)">
+          <div class="day-tab-day">Jue</div>
+          <div class="day-tab-num">21</div>
+        </div>
+        <div class="day-tab" onclick="selectDay(this)">
+          <div class="day-tab-day">Vie</div>
+          <div class="day-tab-num">22</div>
+        </div>
+        <div class="day-tab" onclick="selectDay(this)">
+          <div class="day-tab-day">Sáb</div>
+          <div class="day-tab-num">23</div>
+        </div>
+        <div class="day-tab" onclick="selectDay(this)">
+          <div class="day-tab-day">Dom</div>
+          <div class="day-tab-num">24</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="planner-body">
+      <div class="meal-slot">
+        <div class="meal-slot-header">
+          <div class="meal-slot-type">🌅 Desayuno</div>
+          <div style="font-size:12px; color:var(--text-soft)">8:00 am</div>
+        </div>
+        <div class="meal-slot-body">
+          <div class="meal-slot-emoji">🥞</div>
+          <div class="meal-slot-info">
+            <div class="meal-slot-name">Pancakes de avena sin gluten</div>
+            <div class="meal-slot-macros">350 kcal · P: 18g · C: 44g · G: 10g</div>
+          </div>
+          <div class="meal-slot-actions">
+            <div class="icon-btn" onclick="showToast('🔄 Cambiando comida...')">🔄</div>
+            <div class="icon-btn" onclick="showToast('✏️ Editando comida...')">✏️</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="meal-slot">
+        <div class="meal-slot-header">
+          <div class="meal-slot-type">☀️ Almuerzo</div>
+          <div style="font-size:12px; color:var(--text-soft)">1:00 pm</div>
+        </div>
+        <div class="meal-slot-body">
+          <div class="meal-slot-emoji">🥙</div>
+          <div class="meal-slot-info">
+            <div class="meal-slot-name">Bowl de pavo con arroz integral</div>
+            <div class="meal-slot-macros">520 kcal · P: 45g · C: 52g · G: 14g</div>
+          </div>
+          <div class="meal-slot-actions">
+            <div class="icon-btn" onclick="showToast('🔄 Cambiando comida...')">🔄</div>
+            <div class="icon-btn" onclick="showToast('✏️ Editando comida...')">✏️</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="meal-slot">
+        <div class="meal-slot-header">
+          <div class="meal-slot-type">🌙 Cena</div>
+          <div style="font-size:12px; color:var(--text-soft)">8:00 pm</div>
+        </div>
+        <div class="meal-slot-body">
+          <div class="meal-slot-emoji">🍲</div>
+          <div class="meal-slot-info">
+            <div class="meal-slot-name">Crema de lentejas con espinaca</div>
+            <div class="meal-slot-macros">380 kcal · P: 22g · C: 48g · G: 8g</div>
+          </div>
+          <div class="meal-slot-actions">
+            <div class="icon-btn" onclick="showToast('🔄 Cambiando comida...')">🔄</div>
+            <div class="icon-btn" onclick="showToast('✏️ Editando comida...')">✏️</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="meal-slot">
+        <div class="meal-slot-header">
+          <div class="meal-slot-type">🍎 Snacks</div>
+        </div>
+        <div class="meal-slot-body">
+          <div class="meal-slot-emoji">🫐</div>
+          <div class="meal-slot-info">
+            <div class="meal-slot-name">Frutos rojos con almendras</div>
+            <div class="meal-slot-macros">160 kcal · P: 5g · C: 18g · G: 8g</div>
+          </div>
+          <div class="meal-slot-actions">
+            <div class="icon-btn" onclick="showToast('🔄 Cambiando snack...')">🔄</div>
+            <div class="icon-btn" onclick="showToast('✏️ Editando snack...')">✏️</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="background: var(--green-pale); border-radius: 14px; padding: 14px 16px; display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <div style="font-size:13px; color:var(--text-muted);">Total del día</div>
+          <div style="font-size:20px; font-weight:600; color:var(--green);">1,410 kcal</div>
+        </div>
+        <button class="btn-green" style="width:auto; padding: 10px 20px; font-size:14px;" onclick="showToast('✅ Plan aceptado para mañana')">Aceptar plan</button>
+      </div>
+    </div>
+
+    <div style="height: 100px;"></div>
+
+    <div class="bottom-nav">
+      <div class="nav-item" onclick="switchTab('screen-home', this)">
+        <div class="nav-icon">🏠</div>
+        <div class="nav-label">Inicio</div>
+      </div>
+      <div class="nav-item active" onclick="switchTab('screen-planner', this)">
+        <div class="nav-icon">📅</div>
+        <div class="nav-label">Planner</div>
+      </div>
+      <div class="nav-item" onclick="switchTab('screen-recipes', this)">
+        <div class="nav-icon">🍽️</div>
+        <div class="nav-label">Recetas</div>
+      </div>
+      <div class="nav-item" onclick="switchTab('screen-shopping', this)">
+        <div class="nav-icon">🛒</div>
+        <div class="nav-label">Compras</div>
+      </div>
+      <div class="nav-item" onclick="switchTab('screen-profile', this)">
+        <div class="nav-icon">👤</div>
+        <div class="nav-label">Perfil</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN: RECIPES -->
+  <div class="screen" id="screen-recipes">
+    <div class="status-bar"><span>9:41</span><div class="status-icons">📶 🔋</div></div>
+    <div class="recipes-header">
+      <div class="recipes-title">Recetas para ti</div>
+      <div class="search-bar">
+        <span>🔍</span>
+        <input type="text" placeholder="Buscar recetas...">
+      </div>
+    </div>
+
+    <div class="filter-chips">
+      <div class="chip active" onclick="selectChip(this)">Todas</div>
+      <div class="chip" onclick="selectChip(this)">Desayuno</div>
+      <div class="chip" onclick="selectChip(this)">Almuerzo</div>
+      <div class="chip" onclick="selectChip(this)">Cena</div>
+      <div class="chip" onclick="selectChip(this)">Sin gluten</div>
+      <div class="chip" onclick="selectChip(this)">Alta proteína</div>
+    </div>
+
+    <div class="recipes-grid">
+      <div class="recipe-card" onclick="showRecipe('Avena proteica con berries','Una avena cremosa cargada de proteínas y antioxidantes. Perfecta para empezar el día con energía.','🥣','380','22','48','8')">
+        <div class="recipe-img">🥣<div class="recipe-tag">Sin gluten</div></div>
+        <div class="recipe-info">
+          <div class="recipe-name">Avena proteica con berries</div>
+          <div class="recipe-macros">P: 22g · C: 48g · G: 8g</div>
+          <div class="recipe-cals">380 kcal</div>
+        </div>
+      </div>
+
+      <div class="recipe-card" onclick="showRecipe('Pollo con quinoa y palta','Bowl equilibrado con proteína magra y grasas saludables del aguacate. Tu aliado para ganar masa muscular.','🥗','487','42','38','16')">
+        <div class="recipe-img">🥗<div class="recipe-tag">Alto proteína</div></div>
+        <div class="recipe-info">
+          <div class="recipe-name">Bowl pollo, quinoa y palta</div>
+          <div class="recipe-macros">P: 42g · C: 38g · G: 16g</div>
+          <div class="recipe-cals">487 kcal</div>
+        </div>
+      </div>
+
+      <div class="recipe-card" onclick="showRecipe('Salmón al limón con verduras','Fuente excepcional de omega-3 y proteína completa. Acompañado de vegetales al vapor para un perfil nutricional completo.','🐟','390','38','12','20')">
+        <div class="recipe-img">🐟<div class="recipe-tag">Omega-3</div></div>
+        <div class="recipe-info">
+          <div class="recipe-name">Salmón al limón con verduras</div>
+          <div class="recipe-macros">P: 38g · C: 12g · G: 20g</div>
+          <div class="recipe-cals">390 kcal</div>
+        </div>
+      </div>
+
+      <div class="recipe-card" onclick="showRecipe('Huevos revueltos con espinaca','Desayuno rápido y nutritivo. Los huevos aportan proteína de alta calidad y la espinaca hierro y folato.','🍳','280','20','6','18')">
+        <div class="recipe-img">🍳<div class="recipe-tag">Rápido</div></div>
+        <div class="recipe-info">
+          <div class="recipe-name">Huevos revueltos con espinaca</div>
+          <div class="recipe-macros">P: 20g · C: 6g · G: 18g</div>
+          <div class="recipe-cals">280 kcal</div>
+        </div>
+      </div>
+
+      <div class="recipe-card" onclick="showRecipe('Lentejas con vegetales','Plato vegano alto en proteína vegetal, hierro y fibra. Ideal para mantenerse saciado por horas.','🍲','340','18','52','6')">
+        <div class="recipe-img">🍲<div class="recipe-tag">Vegano</div></div>
+        <div class="recipe-info">
+          <div class="recipe-name">Lentejas con vegetales</div>
+          <div class="recipe-macros">P: 18g · C: 52g · G: 6g</div>
+          <div class="recipe-cals">340 kcal</div>
+        </div>
+      </div>
+
+      <div class="recipe-card" onclick="showRecipe('Yogur griego con granola','Snack proteico perfecto entre comidas. La granola sin azúcar y las semillas aportan grasas saludables.','🥣','220','15','24','7')">
+        <div class="recipe-img">🥛<div class="recipe-tag">Snack</div></div>
+        <div class="recipe-info">
+          <div class="recipe-name">Yogur griego con granola</div>
+          <div class="recipe-macros">P: 15g · C: 24g · G: 7g</div>
+          <div class="recipe-cals">220 kcal</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="height: 100px;"></div>
+
+    <div class="bottom-nav">
+      <div class="nav-item" onclick="switchTab('screen-home', this)">
+        <div class="nav-icon">🏠</div>
+        <div class="nav-label">Inicio</div>
+      </div>
+      <div class="nav-item" onclick="switchTab('screen-planner', this)">
+        <div class="nav-icon">📅</div>
+        <div class="nav-label">Planner</div>
+      </div>
+      <div class="nav-item active" onclick="switchTab('screen-recipes', this)">
+        <div class="nav-icon">🍽️</div>
+        <div class="nav-label">Recetas</div>
+      </div>
+      <div class="nav-item" onclick="switchTab('screen-shopping', this)">
+        <div class="nav-icon">🛒</div>
+        <div class="nav-label">Compras</div>
+      </div>
+      <div class="nav-item" onclick="switchTab('screen-profile', this)">
+        <div class="nav-icon">👤</div>
+        <div class="nav-label">Perfil</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN: SHOPPING -->
+  <div class="screen" id="screen-shopping">
+    <div class="status-bar"><span>9:41</span><div class="status-icons">📶 🔋</div></div>
+    <div class="shopping-header">
+      <div class="shopping-title">Lista de compras 🛒</div>
+      <div class="shopping-sub">Generada desde tu plan semanal</div>
+    </div>
+
+    <div style="display:flex; gap:8px; padding: 16px 20px 4px;">
+      <div style="background:var(--green); color:white; border-radius:20px; padding:6px 16px; font-size:13px; font-weight:500;">12 pendientes</div>
+      <div style="background:var(--bg-surface); border:1.5px solid var(--border); border-radius:20px; padding:6px 16px; font-size:13px; color:var(--text-muted);">5 comprados</div>
+    </div>
+
+    <div class="shopping-category">
+      <div class="cat-label">🥩 Proteínas</div>
+      <div class="shop-item" onclick="toggleShop(this)">
+        <div class="shop-check">✓</div>
+        <div class="shop-emoji">🍗</div>
+        <div class="shop-info">
+          <div class="shop-name done">Pechuga de pollo</div>
+          <div class="shop-qty">800g · aprox. $6.000</div>
+        </div>
+      </div>
+      <div class="shop-item" onclick="toggleShop(this)">
+        <div class="shop-check" style="border-color:var(--border); background:white;"></div>
+        <div class="shop-emoji">🐟</div>
+        <div class="shop-info">
+          <div class="shop-name">Filete de salmón</div>
+          <div class="shop-qty">400g · aprox. $9.500</div>
+        </div>
+      </div>
+      <div class="shop-item" onclick="toggleShop(this)">
+        <div class="shop-check" style="border-color:var(--border); background:white;"></div>
+        <div class="shop-emoji">🥚</div>
+        <div class="shop-info">
+          <div class="shop-name">Huevos</div>
+          <div class="shop-qty">12 unidades · aprox. $3.200</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="shopping-category">
+      <div class="cat-label">🥦 Verduras y frutas</div>
+      <div class="shop-item" onclick="toggleShop(this)">
+        <div class="shop-check">✓</div>
+        <div class="shop-emoji">🥬</div>
+        <div class="shop-info">
+          <div class="shop-name done">Espinaca</div>
+          <div class="shop-qty">200g · aprox. $1.500</div>
+        </div>
+      </div>
+      <div class="shop-item" onclick="toggleShop(this)">
+        <div class="shop-check" style="border-color:var(--border); background:white;"></div>
+        <div class="shop-emoji">🥦</div>
+        <div class="shop-info">
+          <div class="shop-name">Brócoli</div>
+          <div class="shop-qty">1 unidad · aprox. $900</div>
+        </div>
+      </div>
+      <div class="shop-item" onclick="toggleShop(this)">
+        <div class="shop-check" style="border-color:var(--border); background:white;"></div>
+        <div class="shop-emoji">🍎</div>
+        <div class="shop-info">
+          <div class="shop-name">Manzanas</div>
+          <div class="shop-qty">4 unidades · aprox. $1.200</div>
+        </div>
+      </div>
+      <div class="shop-item" onclick="toggleShop(this)">
+        <div class="shop-check" style="border-color:var(--border); background:white;"></div>
+        <div class="shop-emoji">🫐</div>
+        <div class="shop-info">
+          <div class="shop-name">Arándanos</div>
+          <div class="shop-qty">250g · aprox. $2.800</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="shopping-category">
+      <div class="cat-label">🌾 Granos y cereales</div>
+      <div class="shop-item" onclick="toggleShop(this)">
+        <div class="shop-check">✓</div>
+        <div class="shop-emoji">🌾</div>
+        <div class="shop-info">
+          <div class="shop-name done">Avena sin gluten</div>
+          <div class="shop-qty">500g · aprox. $2.900</div>
+        </div>
+      </div>
+      <div class="shop-item" onclick="toggleShop(this)">
+        <div class="shop-check" style="border-color:var(--border); background:white;"></div>
+        <div class="shop-emoji">🍚</div>
+        <div class="shop-info">
+          <div class="shop-name">Quinoa</div>
+          <div class="shop-qty">400g · aprox. $4.200</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin: 16px 20px; background:var(--green-pale); border-radius:14px; padding:14px 16px; display:flex; justify-content:space-between; align-items:center;">
+      <div>
+        <div style="font-size:12px; color:var(--text-muted)">Total estimado</div>
+        <div style="font-size:22px; font-weight:600; color:var(--green)">$32.200</div>
+      </div>
+      <button class="btn-green" style="width:auto; padding:10px 18px; font-size:14px;" onclick="showToast('📤 Lista compartida!')">Compartir</button>
+    </div>
+
+    <div style="height: 100px;"></div>
+
+    <div class="bottom-nav">
+      <div class="nav-item" onclick="switchTab('screen-home', this)">
+        <div class="nav-icon">🏠</div>
+        <div class="nav-label">Inicio</div>
+      </div>
+      <div class="nav-item" onclick="switchTab('screen-planner', this)">
+        <div class="nav-icon">📅</div>
+        <div class="nav-label">Planner</div>
+      </div>
+      <div class="nav-item" onclick="switchTab('screen-recipes', this)">
+        <div class="nav-icon">🍽️</div>
+        <div class="nav-label">Recetas</div>
+      </div>
+      <div class="nav-item active" onclick="switchTab('screen-shopping', this)">
+        <div class="nav-icon">🛒</div>
+        <div class="nav-label">Compras</div>
+      </div>
+      <div class="nav-item" onclick="switchTab('screen-profile', this)">
+        <div class="nav-icon">👤</div>
+        <div class="nav-label">Perfil</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN: PROFILE -->
+  <div class="screen" id="screen-profile">
+    <div class="status-bar white"><span>9:41</span><div class="status-icons" style="color:white">📶 🔋</div></div>
+    <div class="profile-header">
+      <div class="avatar">👩</div>
+      <div class="profile-name">Ana García</div>
+      <div class="profile-goal">🎯 Meta: Bajar de peso · Sin gluten</div>
+    </div>
+
+    <div class="profile-body">
+      <!-- Stats rápidas -->
+      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:16px; margin-top:8px;">
+        <div style="background:white; border-radius:14px; padding:14px 10px; text-align:center;">
+          <div style="font-size:20px; font-weight:600; color:var(--green)">68</div>
+          <div style="font-size:11px; color:var(--text-soft)">kg</div>
+        </div>
+        <div style="background:white; border-radius:14px; padding:14px 10px; text-align:center;">
+          <div style="font-size:20px; font-weight:600; color:var(--green)">165</div>
+          <div style="font-size:11px; color:var(--text-soft)">cm</div>
+        </div>
+        <div style="background:white; border-radius:14px; padding:14px 10px; text-align:center;">
+          <div style="font-size:20px; font-weight:600; color:var(--green)">27</div>
+          <div style="font-size:11px; color:var(--text-soft)">años</div>
+        </div>
+      </div>
+
+      <!-- Perfil nutricional -->
+      <div class="profile-section">
+        <div class="profile-section-title">Perfil nutricional</div>
+        <div class="profile-row" onclick="showToast('✏️ Editando objetivo...')">
+          <div class="profile-row-left">
+            <div class="profile-row-icon">🎯</div>
+            <div class="profile-row-label">Objetivo</div>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <div class="profile-row-value">Bajar de peso</div>
+            <div class="profile-row-arrow">›</div>
+          </div>
+        </div>
+        <div class="profile-row" onclick="showToast('✏️ Editando actividad...')">
+          <div class="profile-row-left">
+            <div class="profile-row-icon">🏃</div>
+            <div class="profile-row-label">Nivel de actividad</div>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <div class="profile-row-value">Moderado</div>
+            <div class="profile-row-arrow">›</div>
+          </div>
+        </div>
+        <div class="profile-row" onclick="showToast('✏️ Editando calorías...')">
+          <div class="profile-row-left">
+            <div class="profile-row-icon">🔥</div>
+            <div class="profile-row-label">Meta calórica</div>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <div class="profile-row-value">1,850 kcal</div>
+            <div class="profile-row-arrow">›</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Restricciones -->
+      <div class="profile-section">
+        <div class="profile-section-title">Restricciones y dieta</div>
+        <div class="tags-wrap">
+          <div class="tag">Sin gluten</div>
+          <div class="tag">Alta proteína</div>
+          <div class="tag alert">🚫 Mariscos</div>
+          <div class="tag alert">🚫 Frutos secos en exceso</div>
+        </div>
+      </div>
+
+      <!-- Nutricionista -->
+      <div class="profile-section">
+        <div class="profile-section-title">Mi nutricionista</div>
+        <div class="profile-row" onclick="showToast('👩‍⚕️ Perfil de Dra. Martínez')">
+          <div class="profile-row-left">
+            <div class="profile-row-icon">👩‍⚕️</div>
+            <div class="profile-row-label">Dra. Martínez</div>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <div class="profile-row-value">Ver indicaciones</div>
+            <div class="profile-row-arrow">›</div>
+          </div>
+        </div>
+        <div class="profile-row" onclick="showToast('📋 3 notas activas')">
+          <div class="profile-row-left">
+            <div class="profile-row-icon">📋</div>
+            <div class="profile-row-label">Notas activas</div>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <div style="background:var(--green); color:white; border-radius:6px; padding:2px 8px; font-size:12px; font-weight:600;">3</div>
+            <div class="profile-row-arrow">›</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cuenta -->
+      <div class="profile-section">
+        <div class="profile-section-title">Cuenta</div>
+        <div class="profile-row" onclick="showToast('🔔 Notificaciones')">
+          <div class="profile-row-left">
+            <div class="profile-row-icon">🔔</div>
+            <div class="profile-row-label">Notificaciones</div>
+          </div>
+          <div class="profile-row-arrow">›</div>
+        </div>
+        <div class="profile-row" onclick="showToast('🔒 Privacidad')">
+          <div class="profile-row-left">
+            <div class="profile-row-icon">🔒</div>
+            <div class="profile-row-label">Privacidad</div>
+          </div>
+          <div class="profile-row-arrow">›</div>
+        </div>
+        <div class="profile-row" onclick="goTo('screen-splash')">
+          <div class="profile-row-left">
+            <div class="profile-row-icon">🚪</div>
+            <div class="profile-row-label" style="color:#e53e3e">Cerrar sesión</div>
+          </div>
+          <div class="profile-row-arrow">›</div>
+        </div>
+      </div>
+
+      <!-- Plan -->
+      <div style="background: linear-gradient(135deg, var(--green) 0%, #0d5240 100%); border-radius: 18px; padding: 20px; display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <div>
+          <div style="font-size:12px; color:rgba(255,255,255,0.7); margin-bottom:4px;">Plan actual</div>
+          <div style="font-size:18px; font-weight:600; color:white;">NutriPlan Free</div>
+          <div style="font-size:12px; color:rgba(255,255,255,0.7); margin-top:4px;">Actualiza para funciones premium</div>
+        </div>
+        <button onclick="showToast('⭐ ¡Bienvenido a Premium!')" style="background:white; color:var(--green); border:none; border-radius:10px; padding:10px 16px; font-size:13px; font-weight:600; cursor:pointer;">Pro ↗</button>
+      </div>
+    </div>
+
+    <div style="height: 40px;"></div>
+
+    <div class="bottom-nav">
+      <div class="nav-item" onclick="switchTab('screen-home', this)">
+        <div class="nav-icon">🏠</div>
+        <div class="nav-label">Inicio</div>
+      </div>
+      <div class="nav-item" onclick="switchTab('screen-planner', this)">
+        <div class="nav-icon">📅</div>
+        <div class="nav-label">Planner</div>
+      </div>
+      <div class="nav-item" onclick="switchTab('screen-recipes', this)">
+        <div class="nav-icon">🍽️</div>
+        <div class="nav-label">Recetas</div>
+      </div>
+      <div class="nav-item" onclick="switchTab('screen-shopping', this)">
+        <div class="nav-icon">🛒</div>
+        <div class="nav-label">Compras</div>
+      </div>
+      <div class="nav-item active" onclick="switchTab('screen-profile', this)">
+        <div class="nav-icon">👤</div>
+        <div class="nav-label">Perfil</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function goTo(screenId) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(screenId).classList.add('active');
+  }
+
+  function goToHome() {
+    goTo('screen-home');
+  }
+
+  function switchTab(screenId, navItem) {
+    goTo(screenId);
+    const nav = navItem.closest('.bottom-nav');
+    nav.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    navItem.classList.add('active');
+  }
+
+  function selectOption(card) {
+    const siblings = card.parentElement.querySelectorAll('.option-card');
+    siblings.forEach(s => s.classList.remove('selected'));
+    card.classList.add('selected');
+  }
+
+  function selectDay(tab) {
+    const siblings = tab.parentElement.querySelectorAll('.day-tab');
+    siblings.forEach(s => s.classList.remove('active'));
+    tab.classList.add('active');
+  }
+
+  function selectChip(chip) {
+    const siblings = chip.parentElement.querySelectorAll('.chip');
+    siblings.forEach(s => s.classList.remove('active'));
+    chip.classList.add('active');
+  }
+
+  function toggleCheck(el) {
+    el.classList.toggle('done');
+    if (el.classList.contains('done')) {
+      el.textContent = '✓';
+      el.closest('.meal-item').style.opacity = '1';
+    } else {
+      el.textContent = '';
+      el.closest('.meal-item').style.opacity = '0.6';
+    }
+  }
+
+  function toggleShop(item) {
+    const check = item.querySelector('.shop-check');
+    const name = item.querySelector('.shop-name');
+    const isDone = check.classList.contains('done');
+    if (isDone) {
+      check.classList.remove('done');
+      check.textContent = '';
+      check.style.background = 'white';
+      check.style.borderColor = 'var(--border)';
+      name.classList.remove('done');
+    } else {
+      check.classList.add('done');
+      check.textContent = '✓';
+      name.classList.add('done');
+    }
+  }
+
+  let toastTimer;
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+  }
+
+  function showRecipe(name, desc, emoji, cals, prot, carbs, fat) {
+    const content = document.getElementById('recipeModalContent');
+    content.innerHTML = `
+      <div class="modal-title">${emoji} ${name}</div>
+      <p class="modal-subtitle">${desc}</p>
+      <div class="recipe-detail-macro">
+        <div class="rdm-item"><div class="rdm-val">${cals}</div><div class="rdm-label">kcal</div></div>
+        <div class="rdm-item"><div class="rdm-val">${prot}g</div><div class="rdm-label">Proteína</div></div>
+        <div class="rdm-item"><div class="rdm-val">${carbs}g</div><div class="rdm-label">Carbos</div></div>
+        <div class="rdm-item"><div class="rdm-val">${fat}g</div><div class="rdm-label">Grasas</div></div>
+      </div>
+      <div style="font-size:14px; color:var(--text-muted); margin-bottom:20px; line-height:1.6;">
+        <strong style="font-size:13px; color:var(--text-soft); text-transform:uppercase; letter-spacing:0.8px;">Ingredientes principales</strong><br><br>
+        Ingredientes frescos y naturales seleccionados según tu perfil nutricional. Receta sin gluten, adaptada a tu objetivo de bajar de peso.
+      </div>
+    `;
+    document.getElementById('recipeModal').classList.add('show');
+  }
+
+  function closeModal() {
+    document.getElementById('recipeModal').classList.remove('show');
+    showToast('✅ Receta agregada al plan');
+  }
+
+  document.getElementById('recipeModal').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+  });
+</script>
+</body>
+</html>
